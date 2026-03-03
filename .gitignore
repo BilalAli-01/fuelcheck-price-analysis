@@ -1,0 +1,19 @@
+# Ignore raw data files
+raw_data/
+staging/
+exports/*.csv
+
+# Ignore virtual environment
+venv/
+
+# Ignore SQL Server local files
+*.mdf
+*.ldf
+*.bak
+
+# Ignore Power BI files
+*.pbix
+
+# Ignore Python cache
+__pycache__/
+*.pyc
