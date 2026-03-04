@@ -1,4 +1,4 @@
-USE FuelCheckDW;
+USE FuelCheckDW
 GO
 -- ============================================================
 -- 03 - Exploration (EDA)
@@ -17,10 +17,10 @@ SELECT
     COUNT(*)                           AS total_rows,
     COUNT(DISTINCT ServiceStationName) AS distinct_stations,
     COUNT(DISTINCT Suburb)             AS distinct_suburbs,
-    COUNT(DISTINCT Postcode)             AS distinct_postcodes,
+    COUNT(DISTINCT Postcode)           AS distinct_postcodes,
     COUNT(DISTINCT Brand)              AS distinct_brands,
     COUNT(DISTINCT FuelCode)           AS distinct_fuelcodes
-FROM dbo.fuelcheck_prices;
+FROM dbo.fuelcheck_prices
 GO
 
 
@@ -30,10 +30,10 @@ GO
 -- ============================================================
 SELECT
     SUM(CASE WHEN ServiceStationName IS NULL THEN 1 ELSE 0 END) AS null_station,
-    SUM(CASE WHEN FuelCode          IS NULL THEN 1 ELSE 0 END) AS null_fuelcode,
-    SUM(CASE WHEN Price             IS NULL THEN 1 ELSE 0 END) AS null_price,
-    SUM(CASE WHEN PriceUpdatedDate  IS NULL THEN 1 ELSE 0 END) AS null_date
-FROM dbo.fuelcheck_prices;
+    SUM(CASE WHEN FuelCode           IS NULL THEN 1 ELSE 0 END) AS null_fuelcode,
+    SUM(CASE WHEN Price              IS NULL THEN 1 ELSE 0 END) AS null_price,
+    SUM(CASE WHEN PriceUpdatedDate   IS NULL THEN 1 ELSE 0 END) AS null_date
+FROM dbo.fuelcheck_prices
 GO
 
 
@@ -45,7 +45,7 @@ GO
 SELECT
     MIN(Price) AS min_price,
     MAX(Price) AS max_price
-FROM dbo.fuelcheck_prices;
+FROM dbo.fuelcheck_prices
 GO
 
 
@@ -56,14 +56,14 @@ GO
 -- ============================================================
 SELECT COUNT(*) AS bad_date_rows
 FROM dbo.fuelcheck_prices
-WHERE PriceUpdatedDate = '1900-01-01';
+WHERE PriceUpdatedDate = '1900-01-01'
 GO
 
 -- Remediation: remove bad-date rows if found above
 -- Only run after confirming bad_date_rows > 0
 -- Do NOT re-run after data has been cleaned; re-import from scratch if needed
 -- DELETE FROM dbo.fuelcheck_prices
--- WHERE PriceUpdatedDate = '1900-01-01';
+-- WHERE PriceUpdatedDate = '1900-01-01'
 -- GO
 
 
@@ -78,7 +78,7 @@ SELECT *
 FROM dbo.fuelcheck_prices
 WHERE Address NOT LIKE '%NSW%'
   AND Address NOT LIKE '%ACT%'
-  AND Address NOT LIKE '%NEW SOUTH WALES%';
+  AND Address NOT LIKE '%NEW SOUTH WALES%'
 GO
 
 -- Step 2: Postcode range check -- identify min and max values
@@ -86,7 +86,7 @@ GO
 SELECT
     MIN(Postcode) AS min_postcode,
     MAX(Postcode) AS max_postcode
-FROM dbo.fuelcheck_prices;
+FROM dbo.fuelcheck_prices
 GO
 
 -- Step 3: Investigate postcodes outside the core NSW/ACT range
@@ -105,14 +105,14 @@ SELECT DISTINCT
 FROM dbo.fuelcheck_prices
 WHERE TRY_CAST(Postcode AS INT) < 1000
    OR TRY_CAST(Postcode AS INT) > 4999
-ORDER BY TRY_CAST(Postcode AS INT);
+ORDER BY TRY_CAST(Postcode AS INT)
 GO
 
 -- Step 4: Confirm Jennings (4383) specifically
 -- Border town on QLD/NSW boundary -- address confirms NSW scope
 SELECT DISTINCT Address
 FROM dbo.fuelcheck_prices
-WHERE Postcode = '4383';
+WHERE Postcode = '4383'
 GO
 
 
@@ -126,7 +126,7 @@ SELECT
     COUNT(*) AS total_rows
 FROM dbo.fuelcheck_prices
 GROUP BY FuelCode
-ORDER BY total_rows DESC;
+ORDER BY total_rows DESC
 GO
 
 
@@ -147,7 +147,7 @@ SELECT
 FROM dbo.fuelcheck_prices
 WHERE FuelCode = 'P98'
 GROUP BY DATEFROMPARTS(YEAR(PriceUpdatedDate), MONTH(PriceUpdatedDate), 1)
-ORDER BY month_start;
+ORDER BY month_start
 GO
 
 
@@ -166,7 +166,7 @@ FROM dbo.fuelcheck_prices
 WHERE FuelCode = 'P98'
 GROUP BY ServiceStationName, CAST(PriceUpdatedDate AS DATE)
 HAVING COUNT(*) > 1
-ORDER BY updates_that_day DESC;
+ORDER BY updates_that_day DESC
 GO
 
 
@@ -187,5 +187,30 @@ FROM dbo.fuelcheck_prices
 WHERE ServiceStationName = 'Ampol Foodary Werrington'
   AND CAST(PriceUpdatedDate AS DATE) = '2024-08-02'
   AND FuelCode = 'P98'
-ORDER BY PriceUpdatedDate;
+ORDER BY PriceUpdatedDate
+GO
+
+
+-- ============================================================
+-- Brand inconsistency investigation
+-- Discovered during normalisation design: some stations had
+-- multiple brand values for the same station + fuel code + day
+-- Included here as it is a source data quality finding
+-- ============================================================
+SELECT
+    ServiceStationName,
+    Address,
+    FuelCode,
+    CAST(PriceUpdatedDate AS DATE) AS price_date,
+    COUNT(DISTINCT Brand)          AS distinct_brands,
+    MIN(Brand)                     AS brand_a,
+    MAX(Brand)                     AS brand_b
+FROM dbo.fuelcheck_prices
+GROUP BY
+    ServiceStationName,
+    Address,
+    FuelCode,
+    CAST(PriceUpdatedDate AS DATE)
+HAVING COUNT(DISTINCT Brand) > 1
+ORDER BY distinct_brands DESC
 GO
