@@ -10,16 +10,16 @@
 IF DB_ID('FuelCheckDW') IS NULL
 BEGIN
 	CREATE DATABASE FuelCheckDW
-END
+END;
 GO
 
 -- Switch context to the database
-USE FuelCheckDW
+USE FuelCheckDW;
 GO
 
 
 -- Landing table for imported CSV data (all columns stored as text)
-CREATE TABLE dbo.fuelcheck_prices (
+CREATE TABLE dbo.fuel_prices_raw (
 	ServiceStationName NVARCHAR(255) NULL,
 	Address NVARCHAR(400) NULL,
 	Suburb NVARCHAR(200) NULL,
@@ -30,8 +30,8 @@ CREATE TABLE dbo.fuelcheck_prices (
 	Price NVARCHAR(50) NULL,
 	SourceFile NVARCHAR(255) NULL,
 	LoadDate NVARCHAR(50) NULL
-)
+);
 GO
 
 -- Verify row count after load
--- SELECT COUNT(*) AS row_count FROM dbo.fuelcheck_prices
+-- SELECT COUNT(*) AS row_count FROM dbo.fuel_prices_raw

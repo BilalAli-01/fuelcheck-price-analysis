@@ -1,11 +1,11 @@
-USE FuelCheckDW
+USE FuelCheckDW;
 GO
 -- ============================================================
 -- 04 - Normalisation
 -- Purpose: Remove intraday polling bias by reducing multiple
 --          daily snapshots to a single observation per
 --          station + fuel type + day
--- Input:   dbo.fuelcheck_prices  (1,750,341 rows)
+-- Input:   dbo.fuel_prices_raw  (1,750,341 rows)
 -- Output:  dbo.fuel_prices_daily (1,249,066 rows)
 -- ============================================================
 -- Approach: AVG(Price) per day chosen over latest-snapshot
@@ -43,14 +43,14 @@ SELECT
     MAX(Price)                     AS max_daily_price,
     COUNT(*)                       AS observations_that_day
 INTO dbo.fuel_prices_daily
-FROM dbo.fuelcheck_prices
+FROM dbo.fuel_prices_raw
 GROUP BY
     ServiceStationName,
     Address,
     Suburb,
     Postcode,
     FuelCode,
-    CAST(PriceUpdatedDate AS DATE)
+    CAST(PriceUpdatedDate AS DATE);
 GO
 
 
@@ -61,7 +61,7 @@ GO
 -- Row count: should be significantly less than raw table
 -- Expected: ~1,249,066 rows after normalisation
 SELECT COUNT(*) AS daily_rows
-FROM dbo.fuel_prices_daily
+FROM dbo.fuel_prices_daily;
 GO
 
 -- Duplicate check: should return 0 rows
@@ -79,7 +79,7 @@ GROUP BY
     FuelCode,
     price_date
 HAVING COUNT(*) > 1
-ORDER BY cnt DESC
+ORDER BY cnt DESC;
 GO
 
 -- Date range: should match cleaned source table
@@ -87,7 +87,7 @@ GO
 SELECT
     MIN(price_date) AS min_date,
     MAX(price_date) AS max_date
-FROM dbo.fuel_prices_daily
+FROM dbo.fuel_prices_daily;
 GO
 
 -- Spot check: confirm aggregation looks sensible
@@ -103,5 +103,5 @@ SELECT TOP 20
     max_daily_price,
     observations_that_day
 FROM dbo.fuel_prices_daily
-ORDER BY observations_that_day DESC
+ORDER BY observations_that_day DESC;
 GO
