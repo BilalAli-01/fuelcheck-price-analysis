@@ -44,7 +44,7 @@ The project demonstrates the full analytics workflow: raw data ingestion, valida
 ```
 fuelcheck-price-analysis/
 ├── etl/
-│   └── 00_combine_raw_files.py       # Consolidates 25 monthly CSV/xlsx files
+│   └── 01_combine_raw_files.py       # Consolidates 25 monthly CSV/xlsx files
 ├── sql/
 │   ├── 01_setup.sql                  # Database and table creation
 │   ├── 02_validation_and_typing.sql  # Type conversion and bad data removal
@@ -61,7 +61,7 @@ fuelcheck-price-analysis/
 
 ## Data Source
 
-- **Source:** [NSW Government FuelCheck](https://www.nsw.gov.au/driving-boating-and-transport/vehicle-registration/managing-registration/fuelcheck)
+- **Source:** [NSW Government FuelCheck](https://data.nsw.gov.au/data/dataset/fuel-check)
 - **Coverage:** NSW and ACT
 - **Period:** January 2024 – January 2026
 - **Format:** 25 monthly CSV and Excel files
@@ -73,13 +73,41 @@ fuelcheck-price-analysis/
 
 ## How to Run
 
-1. Place monthly source files in the `raw_data/` folder
-2. Run `etl/00_combine_raw_files.py` to produce `staging/combined_data.csv`
-3. Import `combined_data.csv` into SQL Server as `dbo.fuel_prices_raw`
-4. Execute SQL files in order: `01` → `02` → `03` → `04` → `05`
-5. Open `dashboards/fuelcheck_price_analysis.pbix` in Power BI Desktop and refresh the data connection
+> **Prerequisites:** Python 3.x with pandas and openpyxl installed, SQL Server, and Power BI Desktop.
 
-> Raw data and staging files are excluded from this repository via `.gitignore`. Source files are publicly available from the NSW Government FuelCheck portal.
+1. **Clone the repository**
+   ```
+   git clone https://github.com/BilalAli-01/fuelcheck-price-analysis.git
+   ```
+
+2. **Download the source data**
+   - Download monthly price files from the [NSW Government FuelCheck portal](https://data.nsw.gov.au/data/dataset/fuel-check)
+   - Create a `raw_data/` folder in the project root and place all monthly files inside it
+
+3. **Run the ETL script**
+   ```
+   python etl/01_combine_raw_files.py
+   ```
+   This will automatically create a `staging/` folder in the project root and produce `staging/combined_data.csv`
+
+4. **Import into SQL Server**
+   - Import `staging/combined_data.csv` into a SQL Server database named `FuelCheckDW` as the table `dbo.fuel_prices_raw`
+   - This can be done via SQL Server Management Studio → right click database → Tasks → Import Flat File
+
+5. **Execute SQL files in order**
+   ```
+   01_setup.sql
+   02_validation_and_typing.sql
+   03_eda.sql
+   04_normalisation.sql
+   05_analysis.sql
+   ```
+
+6. **Open the Power BI dashboard**
+   - Open `dashboards/fuelcheck_price_analysis.pbix` in Power BI Desktop
+   - You will be prompted with a connection error as the file points to the original SQL Server instance
+   - Go to Home → Transform Data → Data Source Settings and update the server name to your local SQL Server instance
+   - Refresh the data and all visuals will populate
 
 ---
 
@@ -127,7 +155,7 @@ This confirmed the dataset represents **periodic polling snapshots**, not genuin
 
 ## Analytical Outputs
 
-All analysis queries in `05_analysis.sql` use `dbo.fuel_prices_daily` as the source.
+All analysis queries in `05_analysis.sql` use `dbo.fuel_prices_daily` as the source. Sections 3 and 4 use a `@FuelCode` variable at the top of each batch for easy fuel type switching.
 
 | Section | Output |
 |---|---|
