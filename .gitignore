@@ -11,9 +11,6 @@ venv/
 *.ldf
 *.bak
 
-# Ignore Power BI files
-*.pbix
-
 # Ignore Python cache
 __pycache__/
 *.pyc
