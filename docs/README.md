@@ -44,7 +44,7 @@ The project demonstrates the full analytics workflow: raw data ingestion, valida
 ```
 fuelcheck-price-analysis/
 ├── etl/
-│   └── 00_combine_raw_files.py       # Consolidates 25 monthly CSV/xlsx files
+│   └── 01_combine_raw_files.py       # Consolidates 25 monthly CSV/xlsx files
 ├── sql/
 │   ├── 01_setup.sql                  # Database and table creation
 │   ├── 02_validation_and_typing.sql  # Type conversion and bad data removal
@@ -74,7 +74,7 @@ fuelcheck-price-analysis/
 ## How to Run
 
 1. Place monthly source files in the `raw_data/` folder
-2. Run `etl/00_combine_raw_files.py` to produce `staging/combined_data.csv`
+2. Run `etl/01_combine_raw_files.py` to produce `staging/combined_data.csv`
 3. Import `combined_data.csv` into SQL Server as `dbo.fuel_prices_raw`
 4. Execute SQL files in order: `01` → `02` → `03` → `04` → `05`
 5. Open `dashboards/fuelcheck_price_analysis.pbix` in Power BI Desktop and refresh the data connection
